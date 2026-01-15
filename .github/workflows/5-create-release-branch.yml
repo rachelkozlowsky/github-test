@@ -1,0 +1,40 @@
+name: Create Release Branch
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  create-release-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0' # Necessário para ler as tags anteriores
+
+      - name: Calculate Next Version
+        id: version
+        uses: anothrNick/github-tag-action@1.64.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+          DRY_RUN: true # Apenas calcula a versão, não cria a tag
+          DEFAULT_BUMP: minor # Assume que uma release da develop é uma feature (minor)
+
+      - name: Create and Push Release Branch
+        run: |
+          VERSION="${{ steps.version.outputs.new_tag }}"
+          BRANCH_NAME="release-$VERSION"
+          
+          echo "Versão calculada: $VERSION"
+          echo "Criando branch: $BRANCH_NAME"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Cria a branch localmente
+          git checkout -b $BRANCH_NAME
+          
+          # Envia para o repositório remoto
+          git push origin $BRANCH_NAME

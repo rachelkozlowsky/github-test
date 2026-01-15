@@ -1,0 +1,22 @@
+name: Auto PR Release to Homol
+
+on:
+  push:
+    branches:
+      - 'release-*'
+
+jobs:
+  create-pr-homol:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: Release Candidate
+          title: 'Release Candidate: ${{ github.ref_name }} to Homol'
+          body: 'Automated PR for Homol release from release branch.'
+          branch: ${{ github.ref_name }}
+          base: homol
