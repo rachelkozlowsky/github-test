@@ -1,0 +1,43 @@
+name: Deploy and Versioning
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy manually'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+
+jobs:
+  versioning:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+
+      - name: Bump version and push tag
+        uses: anothrNick/github-tag-action@1.64.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: true
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [versioning]
+    if: always() && (needs.versioning.result == 'success' || needs.versioning.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to Production
+        run: |
+          echo "Iniciando deploy em PRODUÇÃO..."
+          echo "Versão: ${{ github.ref_name }}"
+          echo "Deploy finalizado com sucesso."
