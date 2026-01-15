@@ -23,7 +23,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
           DRY_RUN: true
-          DEFAULT_BUMP: minor
+          DEFAULT_BUMP: patch # Alterado de minor para patch (0.0.x)
 
       - name: Create and Push Release Branch
         id: create_branch
