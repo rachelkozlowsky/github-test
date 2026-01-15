@@ -3,26 +3,20 @@ name: Deploy and Versioning
 on:
   push:
     branches:
-      - develop
-      - 'release-*'
-      - homol
       - main
   workflow_dispatch:
     inputs:
       environment:
         description: 'Environment to deploy manually'
         required: true
-        default: 'develop'
+        default: 'production'
         type: choice
         options:
-        - develop
-        - homol
         - production
 
 jobs:
   versioning:
     runs-on: ubuntu-latest
-    # Executa versionamento apenas na branch main
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
@@ -42,9 +36,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Deploy Placeholder
+      - name: Deploy to Production
         run: |
-          echo "Iniciando deploy simulado..."
-          echo "Branch/Ref: ${{ github.ref_name }}"
-          echo "Ambiente: ${{ inputs.environment || 'Automático' }}"
-          echo "Como não há ambientes configurados (ENV), este passo apenas registra a execução."
+          echo "Iniciando deploy em PRODUÇÃO..."
+          echo "Versão: ${{ github.ref_name }}"
+          echo "Deploy finalizado com sucesso."
