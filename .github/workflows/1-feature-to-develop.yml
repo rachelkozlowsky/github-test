@@ -8,16 +8,19 @@ on:
 jobs:
   create-pr-develop:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Auto PR from feature branch
-          title: 'Merge Feature: ${{ github.ref_name }} into Develop'
-          body: 'Automated PR created by GitHub Actions.'
-          branch: ${{ github.ref_name }}
-          base: develop
-          delete-branch: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base develop \
+            --head ${{ github.ref_name }} \
+            --title "Merge Feature: ${{ github.ref_name }} into Develop" \
+            --body "Automated PR created by GitHub Actions." \
+            || echo "PR creation failed or PR already exists."

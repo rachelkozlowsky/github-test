@@ -8,15 +8,19 @@ on:
 jobs:
   create-pr-homol:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Release Candidate
-          title: 'Release Candidate: ${{ github.ref_name }} to Homol'
-          body: 'Automated PR for Homol release from release branch.'
-          branch: ${{ github.ref_name }}
-          base: homol
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base homol \
+            --head ${{ github.ref_name }} \
+            --title "Release Candidate: ${{ github.ref_name }} to Homol" \
+            --body "Automated PR for Homol release from release branch." \
+            || echo "PR creation failed or PR already exists."

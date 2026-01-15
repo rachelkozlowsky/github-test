@@ -8,15 +8,19 @@ on:
 jobs:
   create-pr-production:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: Release to Production
-          title: 'Release: Homol to Main'
-          body: 'Automated PR for Production release.'
-          branch: homol
-          base: main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head homol \
+            --title "Release: Homol to Main" \
+            --body "Automated PR for Production release." \
+            || echo "PR creation failed or PR already exists."
