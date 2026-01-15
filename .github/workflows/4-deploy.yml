@@ -31,6 +31,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
+          DEFAULT_BUMP: patch # Alterado para patch
 
       - name: Create GitHub Release
         env:
@@ -39,7 +40,6 @@ jobs:
           TAG_NAME="${{ steps.tagger.outputs.new_tag }}"
           echo "Criando Release no GitHub para a tag: $TAG_NAME"
           
-          # Cria a release oficial baseada na tag gerada
           gh release create "$TAG_NAME" \
             --title "Release $TAG_NAME" \
             --generate-notes \
@@ -55,7 +55,6 @@ jobs:
       - name: Deploy to Production
         run: |
           echo "Iniciando deploy em PRODUÇÃO..."
-          # Se houve versionamento, usamos a tag nova, senão usamos a ref atual
           VERSION="${{ needs.versioning.outputs.new_tag || github.ref_name }}"
           echo "Versão: $VERSION"
           echo "Deploy finalizado com sucesso."
