@@ -18,16 +18,32 @@ jobs:
   versioning:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    outputs:
+      new_tag: ${{ steps.tagger.outputs.new_tag }}
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: '0'
 
       - name: Bump version and push tag
+        id: tagger
         uses: anothrNick/github-tag-action@1.64.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ steps.tagger.outputs.new_tag }}"
+          echo "Criando Release no GitHub para a tag: $TAG_NAME"
+          
+          # Cria a release oficial baseada na tag gerada
+          gh release create "$TAG_NAME" \
+            --title "Release $TAG_NAME" \
+            --generate-notes \
+            --latest
 
   deploy:
     runs-on: ubuntu-latest
@@ -39,5 +55,7 @@ jobs:
       - name: Deploy to Production
         run: |
           echo "Iniciando deploy em PRODUÇÃO..."
-          echo "Versão: ${{ github.ref_name }}"
+          # Se houve versionamento, usamos a tag nova, senão usamos a ref atual
+          VERSION="${{ needs.versioning.outputs.new_tag || github.ref_name }}"
+          echo "Versão: $VERSION"
           echo "Deploy finalizado com sucesso."
