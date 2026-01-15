@@ -1,4 +1,4 @@
-name: Create Release Branch
+name: Create Release Branch and PR
 
 on:
   push:
@@ -6,12 +6,15 @@ on:
       - develop
 
 jobs:
-  create-release-branch:
+  create-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: '0' # Necessário para ler as tags anteriores
+          fetch-depth: '0'
 
       - name: Calculate Next Version
         id: version
@@ -19,13 +22,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           WITH_V: true
-          DRY_RUN: true # Apenas calcula a versão, não cria a tag
-          DEFAULT_BUMP: minor # Assume que uma release da develop é uma feature (minor)
+          DRY_RUN: true
+          DEFAULT_BUMP: minor
 
       - name: Create and Push Release Branch
+        id: create_branch
         run: |
           VERSION="${{ steps.version.outputs.new_tag }}"
           BRANCH_NAME="release-$VERSION"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
           
           echo "Versão calculada: $VERSION"
           echo "Criando branch: $BRANCH_NAME"
@@ -33,8 +38,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Cria a branch localmente
           git checkout -b $BRANCH_NAME
-          
-          # Envia para o repositório remoto
           git push origin $BRANCH_NAME
+
+      - name: Create Pull Request to Homol
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ steps.create_branch.outputs.branch_name }}"
+          gh pr create \
+            --base homol \
+            --head $BRANCH_NAME \
+            --title "Release Candidate: $BRANCH_NAME to Homol" \
+            --body "Automated PR for Homol release created from Develop." \
+            || echo "PR creation failed or PR already exists."
